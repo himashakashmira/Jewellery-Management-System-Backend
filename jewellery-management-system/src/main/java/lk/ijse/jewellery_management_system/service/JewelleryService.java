@@ -1,6 +1,7 @@
 package lk.ijse.jewellery_management_system.service;
 
 import lk.ijse.jewellery_management_system.dto.CategoryDTO;
+import lk.ijse.jewellery_management_system.dto.GoldRateDTO;
 import lk.ijse.jewellery_management_system.dto.ProductDTO;
 
 import java.util.List;
@@ -13,4 +14,10 @@ public interface JewelleryService {
     void saveCategory(CategoryDTO categoryDTO);
 
     List<CategoryDTO> getAllCategories();
+
+    void updateGoldRate(GoldRateDTO goldRateDTO);
+
+    void updateGoldRate(GoldRateDTO dto);
+
+    Double calculateProductPrice(Integer productId);
 }
