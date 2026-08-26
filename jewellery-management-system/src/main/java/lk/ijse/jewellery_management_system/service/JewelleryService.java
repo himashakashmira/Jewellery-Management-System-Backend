@@ -17,7 +17,5 @@ public interface JewelleryService {
 
     void updateGoldRate(GoldRateDTO goldRateDTO);
 
-    void updateGoldRate(GoldRateDTO dto);
-
     Double calculateProductPrice(Integer productId);
 }

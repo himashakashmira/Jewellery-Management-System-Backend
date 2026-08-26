@@ -6,6 +6,7 @@ import lk.ijse.jewellery_management_system.dto.ProductDTO;
 import lk.ijse.jewellery_management_system.entity.Category;
 import lk.ijse.jewellery_management_system.entity.GoldRate;
 import lk.ijse.jewellery_management_system.entity.Product;
+import lk.ijse.jewellery_management_system.repository.GoldRateRepository;
 import lk.ijse.jewellery_management_system.repository.ProductRepository;
 import lk.ijse.jewellery_management_system.repository.CategoryRepository;
 import lk.ijse.jewellery_management_system.service.JewelleryService;
@@ -21,7 +22,9 @@ import java.util.List;
 public class JewelleryServiceImpl implements JewelleryService {
 
     private final ProductRepository productRepository;
+    private final GoldRateRepository goldRateRepository;
     private final CategoryRepository categoryRepository;
+
 
     @Override
     public String saveProduct(ProductDTO dto) {
