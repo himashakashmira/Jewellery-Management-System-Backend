@@ -1,18 +1,14 @@
 package lk.ijse.jewellery_management_system.service.impl;
 
-import lk.ijse.jewellery_management_system.dto.CategoryDTO;
-import lk.ijse.jewellery_management_system.dto.GoldRateDTO;
-import lk.ijse.jewellery_management_system.dto.ProductDTO;
-import lk.ijse.jewellery_management_system.entity.Category;
-import lk.ijse.jewellery_management_system.entity.GoldRate;
-import lk.ijse.jewellery_management_system.entity.Product;
-import lk.ijse.jewellery_management_system.repository.GoldRateRepository;
-import lk.ijse.jewellery_management_system.repository.ProductRepository;
-import lk.ijse.jewellery_management_system.repository.CategoryRepository;
+import jakarta.transaction.Transactional;
+import lk.ijse.jewellery_management_system.dto.*;
+import lk.ijse.jewellery_management_system.entity.*;
+import lk.ijse.jewellery_management_system.repository.*;
 import lk.ijse.jewellery_management_system.service.JewelleryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -24,6 +20,8 @@ public class JewelleryServiceImpl implements JewelleryService {
     private final ProductRepository productRepository;
     private final GoldRateRepository goldRateRepository;
     private final CategoryRepository categoryRepository;
+    private final RepairRepository repairRepository;
+    private final CustomerRepository customerRepository;
 
 
     @Override
@@ -95,5 +93,77 @@ public class JewelleryServiceImpl implements JewelleryService {
         Double wastageValue = goldValue * (product.getWastage() / 100);
 
         return goldValue + wastageValue + product.getLabourCost();
+    }
+
+    @Override
+    @Transactional // use this for update operations
+    public void registerRepair(RepairDTO dto) {
+        // find customer first
+        Customer customer = customerRepository.findById(dto.getCustomerId())
+                .orElseThrow(() -> new RuntimeException("Customer not found"));
+
+        // create repair entity
+        Repair repair = Repair.builder()
+                .itemName(dto.getItemName())
+                .description(dto.getDescription())
+                .status("Received") // default status
+                .receivedDate(LocalDate.now())
+                .estimatedCost(dto.getEstimatedCost())
+                .customer(customer)
+                .build();
+
+        repairRepository.save(repair);
+    }
+
+    @Override
+    @Transactional
+    public void updateRepairStatus(Integer repairId, String newStatus) {
+        // get repair from database
+        Repair repair = repairRepository.findById(repairId)
+                .orElseThrow(() -> new RuntimeException("Repair job not found"));
+
+        // update the status string
+        repair.setStatus(newStatus);
+
+        // logic: if status is 'Ready', we can add more logic later like sending SMS
+        if (newStatus.equalsIgnoreCase("Ready")) {
+            System.out.println("Repair is finished for: " + repair.getItemName());
+        }
+
+        repairRepository.save(repair);
+    }
+
+    // get all repair records from database
+    @Override
+    public List<RepairDTO> getAllRepairs() {
+        List<Repair> all = repairRepository.findAll();
+        List<RepairDTO> dtoList = new ArrayList<>();
+
+        // convert entity list to dto list
+        for (Repair r : all) {
+            dtoList.add(new RepairDTO(
+                    r.getId(),
+                    r.getItemName(),
+                    r.getDescription(),
+                    r.getStatus(),
+                    r.getReceivedDate(),
+                    r.getEstimatedCost(),
+                    r.getCustomer().getId()
+            ));
+        }
+        return dtoList;
+    }
+
+    // save customer details to database
+    @Override
+    public void saveCustomer(CustomerDTO dto) {
+        Customer customer = Customer.builder()
+                .name(dto.getName())
+                .contact(dto.getContact())
+                .email(dto.getEmail())
+                .address(dto.getAddress())
+                .loyaltyPoints(0) // initial points 0
+                .build();
+        customerRepository.save(customer);
     }
 }
