@@ -17,5 +17,4 @@ public class CustomerController {
         jewelleryService.saveCustomer(dto);
         return "Customer saved successfully!";
     }
-
 }
