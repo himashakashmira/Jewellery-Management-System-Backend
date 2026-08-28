@@ -1,7 +1,7 @@
 package lk.ijse.jewellery_management_system.controller;
 
 import lk.ijse.jewellery_management_system.dto.ProductDTO;
-import lk.ijse.jewellery_management_system.service.JewelleryService;
+import lk.ijse.jewellery_management_system.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,15 +12,25 @@ import java.util.List;
 @RequiredArgsConstructor
 public class InventoryController {
 
-    private final JewelleryService jewelleryService;
+    private final ProductService productService;
 
-    @PostMapping
-    public String saveProduct(@RequestBody ProductDTO productDTO) {
-        return jewelleryService.saveProduct(productDTO);
+    @PostMapping("/save")
+    public String save(@RequestBody ProductDTO dto) {
+        return productService.saveProduct(dto);
     }
 
-    @GetMapping
+    @PutMapping("/update/{id}")
+    public String update(@PathVariable Integer id, @RequestBody ProductDTO dto) {
+        return productService.updateProduct(id, dto);
+    }
+
+    @DeleteMapping("/delete/{id}")
+    public String delete(@PathVariable Integer id) {
+        return productService.deleteProduct(id);
+    }
+
+    @GetMapping("/all")
     public List<ProductDTO> getAll() {
-        return jewelleryService.getAllProducts();
+        return productService.getAllProducts();
     }
 }

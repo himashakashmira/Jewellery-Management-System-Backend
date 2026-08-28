@@ -1,7 +1,7 @@
 package lk.ijse.jewellery_management_system.controller;
 
 import lk.ijse.jewellery_management_system.dto.CategoryDTO;
-import lk.ijse.jewellery_management_system.service.JewelleryService;
+import lk.ijse.jewellery_management_system.service.CategoryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,16 +12,16 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CategoryController {
 
-    private final JewelleryService jewelleryService;
+    private final CategoryService categoryService;
 
     @PostMapping
     public String saveCategory(@RequestBody CategoryDTO categoryDTO) {
-        jewelleryService.saveCategory(categoryDTO);
+        categoryService.saveCategory(categoryDTO);
         return "Category Saved!";
     }
 
     @GetMapping
     public List<CategoryDTO> getAll() {
-        return jewelleryService.getAllCategories();
+        return categoryService.getAllCategories();
     }
 }
