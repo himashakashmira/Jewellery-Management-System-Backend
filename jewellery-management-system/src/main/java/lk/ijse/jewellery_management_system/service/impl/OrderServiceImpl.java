@@ -26,11 +26,11 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public String placeOrder(OrderDTO dto) {
-        // 1. Get current customer
+        // Get current customer
         Customer customer = customerRepository.findById(dto.getCustomerId())
                 .orElseThrow(() -> new RuntimeException("Customer Not Found"));
 
-        // 2. Create the main Order
+        // Create the main Order
         Order order = Order.builder()
                 .orderDate(LocalDateTime.now())
                 .customer(customer)
@@ -41,11 +41,11 @@ public class OrderServiceImpl implements OrderService {
         Order savedOrder = orderRepository.save(order);
         Double finalBillAmount = 0.0;
 
-        // 3. Process each item in the cart
+        // Process each item in the cart
         for (OrderDetailDTO itemDto : dto.getItems()) {
             Product product = productRepository.findById(itemDto.getProductId()).orElseThrow();
 
-            // Logic: Get price from our GoldRate calculation service
+            // Get price from our GoldRate calculation service
             Double currentPrice = goldRateService.calculateProductPrice(product.getId());
 
             // Save Order Details
@@ -67,11 +67,11 @@ public class OrderServiceImpl implements OrderService {
             finalBillAmount += (currentPrice * itemDto.getQty());
         }
 
-        // 4. Update the final amount in the main order
+        // Update the final amount in the main order
         savedOrder.setTotalAmount(finalBillAmount - dto.getDiscount());
         orderRepository.save(savedOrder);
 
-        // 5. Add loyalty points (Ex: 1 point for every 1000 Rs)
+        // Add loyalty points
         int points = (int) (finalBillAmount / 1000);
         customer.setLoyaltyPoints(customer.getLoyaltyPoints() + points);
         customerRepository.save(customer);

@@ -14,7 +14,7 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        // if categories are empty, add default values
+
         if (categoryRepository.count() == 0) {
             categoryRepository.save(Category.builder().name("Rings").build());
             categoryRepository.save(Category.builder().name("Necklace").build());

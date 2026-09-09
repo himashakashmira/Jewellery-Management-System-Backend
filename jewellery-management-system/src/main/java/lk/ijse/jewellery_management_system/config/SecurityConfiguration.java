@@ -13,8 +13,6 @@ public class SecurityConfiguration {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
-        // simple way to disable csrf using lambda
-        // no need to import AbstractHttpRequestsConfigurer
         http.csrf(csrf -> csrf.disable());
 
         // allow all requests without login for testing logic
