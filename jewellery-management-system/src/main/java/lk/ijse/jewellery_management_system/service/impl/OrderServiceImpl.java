@@ -19,60 +19,63 @@ public class OrderServiceImpl implements OrderService {
 
     private final OrderRepository orderRepository;
     private final OrderDetailRepository orderDetailRepository;
-    private final ProductRepository productRepository;
-    private final CustomerRepository customerRepository;
     private final StockRepository stockRepository;
+    private final CustomerRepository customerRepository;
+    private final ProductRepository productRepository;
     private final GoldRateService goldRateService;
 
     @Override
     public String placeOrder(OrderDTO dto) {
-        // 1. find customer
-        Customer customer = customerRepository.findById(dto.getCustomerId()).orElseThrow();
+        // 1. Get current customer
+        Customer customer = customerRepository.findById(dto.getCustomerId())
+                .orElseThrow(() -> new RuntimeException("Customer Not Found"));
 
-        // 2. create main order object
+        // 2. Create the main Order
         Order order = Order.builder()
                 .orderDate(LocalDateTime.now())
                 .customer(customer)
                 .discount(dto.getDiscount())
-                .totalAmount(0.0) // set initial 0
+                .totalAmount(0.0) // initial 0, we calculate later
                 .build();
 
         Order savedOrder = orderRepository.save(order);
-        Double finalTotal = 0.0;
+        Double finalBillAmount = 0.0;
 
-        // 3. process each item in the order
+        // 3. Process each item in the cart
         for (OrderDetailDTO itemDto : dto.getItems()) {
             Product product = productRepository.findById(itemDto.getProductId()).orElseThrow();
 
-            // get current price using our logic service
-            Double price = goldRateService.calculateProductPrice(product.getId());
+            // Logic: Get price from our GoldRate calculation service
+            Double currentPrice = goldRateService.calculateProductPrice(product.getId());
 
-            // save order details
+            // Save Order Details
             OrderDetail detail = OrderDetail.builder()
                     .order(savedOrder)
                     .product(product)
                     .qty(itemDto.getQty())
-                    .unitPrice(price)
+                    .unitPrice(currentPrice)
                     .build();
             orderDetailRepository.save(detail);
 
-            // update inventory stock
+            // Update stock (Reduce Qty)
             Stock stock = stockRepository.findByProduct(product);
-            stock.setQuantity(stock.getQuantity() - itemDto.getQty());
-            stockRepository.save(stock);
+            if(stock != null) {
+                stock.setQuantity(stock.getQuantity() - itemDto.getQty());
+                stockRepository.save(stock);
+            }
 
-            finalTotal += (price * itemDto.getQty());
+            finalBillAmount += (currentPrice * itemDto.getQty());
         }
 
-        // 4. update final order amount after discount
-        savedOrder.setTotalAmount(finalTotal - dto.getDiscount());
+        // 4. Update the final amount in the main order
+        savedOrder.setTotalAmount(finalBillAmount - dto.getDiscount());
         orderRepository.save(savedOrder);
 
-        // 5. add loyalty points (logic: 1 point for every 1000 Rs)
-        int points = (int) (finalTotal / 1000);
+        // 5. Add loyalty points (Ex: 1 point for every 1000 Rs)
+        int points = (int) (finalBillAmount / 1000);
         customer.setLoyaltyPoints(customer.getLoyaltyPoints() + points);
         customerRepository.save(customer);
 
-        return "Order Placed Successfully. ID: " + savedOrder.getId();
+        return "Order " + savedOrder.getId() + " Placed Successfully!";
     }
 }
