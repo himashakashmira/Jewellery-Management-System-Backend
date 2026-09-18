@@ -3,6 +3,7 @@ package lk.ijse.jewellery_management_system.service.impl;
 import jakarta.transaction.Transactional;
 import lk.ijse.jewellery_management_system.dto.OrderDTO;
 import lk.ijse.jewellery_management_system.dto.OrderDetailDTO;
+import lk.ijse.jewellery_management_system.dto.OrderStatsDTO;
 import lk.ijse.jewellery_management_system.entity.*;
 import lk.ijse.jewellery_management_system.repository.*;
 import lk.ijse.jewellery_management_system.service.GoldRateService;
@@ -11,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -77,5 +79,15 @@ public class OrderServiceImpl implements OrderService {
         customerRepository.save(customer);
 
         return "Order " + savedOrder.getId() + " Placed Successfully!";
+    }
+
+    @Override
+    public OrderStatsDTO getOrderStats() {
+        List<Order> allOrders = orderRepository.findAll();
+        long orderCount = allOrders.size();
+        double totalSales = allOrders.stream()
+                .mapToDouble(o -> o.getTotalAmount() != null ? o.getTotalAmount() : 0.0)
+                .sum();
+        return new OrderStatsDTO(orderCount, totalSales);
     }
 }

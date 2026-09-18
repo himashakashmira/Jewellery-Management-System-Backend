@@ -18,8 +18,13 @@ public class GoldRateController {
         return "Today's Gold Rate Updated!";
     }
 
+    @GetMapping("/latest")
+    public GoldRateDTO getLatest() {
+        return goldRateService.getLatestRate();
+    }
+
     @GetMapping("/price/{productId}")
     public Double getPrice(@PathVariable Integer productId) {
         return goldRateService.calculateProductPrice(productId);
     }
-}
+}

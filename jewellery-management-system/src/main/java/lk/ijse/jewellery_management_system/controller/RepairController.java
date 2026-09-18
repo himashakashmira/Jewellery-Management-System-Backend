@@ -1,6 +1,7 @@
 package lk.ijse.jewellery_management_system.controller;
 
 import lk.ijse.jewellery_management_system.dto.RepairDTO;
+import lk.ijse.jewellery_management_system.dto.RepairStatsDTO;
 import lk.ijse.jewellery_management_system.service.RepairService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -30,4 +31,9 @@ public class RepairController {
     public List<RepairDTO> getAll() {
         return repairServicee.getAllRepairs();
     }
-}
+
+    @GetMapping("/stats")
+    public RepairStatsDTO getStats() {
+        return repairServicee.getRepairStats();
+    }
+}

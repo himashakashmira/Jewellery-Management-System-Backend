@@ -1,6 +1,7 @@
 package lk.ijse.jewellery_management_system.service.impl;
 
 import lk.ijse.jewellery_management_system.dto.RepairDTO;
+import lk.ijse.jewellery_management_system.dto.RepairStatsDTO;
 import lk.ijse.jewellery_management_system.entity.Customer;
 import lk.ijse.jewellery_management_system.entity.Repair;
 import lk.ijse.jewellery_management_system.repository.CustomerRepository;
@@ -70,4 +71,18 @@ public class RepairServiceImpl implements RepairService {
                         r.getCustomer().getId()))
                 .toList();
     }
-}
+
+    @Override
+    public RepairStatsDTO getRepairStats() {
+        List<Repair> allRepairs = repairRepository.findAll();
+        long totalRepairs = allRepairs.size();
+        long readyCount = allRepairs.stream().filter(r -> "Ready".equalsIgnoreCase(r.getStatus())).count();
+        long craftingCount = allRepairs.stream()
+                .filter(r -> "Crafting".equalsIgnoreCase(r.getStatus()) || "Melting".equalsIgnoreCase(r.getStatus()))
+                .count();
+        double totalRevenue = allRepairs.stream()
+                .mapToDouble(r -> r.getEstimatedCost() != null ? r.getEstimatedCost() : 0.0)
+                .sum();
+        return new RepairStatsDTO(totalRepairs, readyCount, craftingCount, totalRevenue);
+    }
+}

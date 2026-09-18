@@ -1,6 +1,7 @@
 package lk.ijse.jewellery_management_system.service;
 
 import lk.ijse.jewellery_management_system.dto.RepairDTO;
+import lk.ijse.jewellery_management_system.dto.RepairStatsDTO;
 
 import java.util.List;
 
@@ -10,4 +11,6 @@ public interface RepairService {
     void updateRepairStatus(Integer id, String status);
 
     List<RepairDTO> getAllRepairs();
-}
+
+    RepairStatsDTO getRepairStats();
+}

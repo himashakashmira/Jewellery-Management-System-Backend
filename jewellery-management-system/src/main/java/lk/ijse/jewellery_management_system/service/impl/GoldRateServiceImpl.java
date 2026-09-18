@@ -39,4 +39,14 @@ public class GoldRateServiceImpl implements GoldRateService {
         Double wastageValue = goldValue * (product.getWastage() / 100);
         return goldValue + wastageValue + product.getLabourCost();
     }
-}
+
+    @Override
+    public GoldRateDTO getLatestRate() {
+        GoldRate latestRate = goldRateRepository.findAll().stream()
+                .sorted((a, b) -> b.getUpdatedAt().compareTo(a.getUpdatedAt()))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("No gold rate found. Please update the rate first."));
+
+        return new GoldRateDTO(latestRate.getRate22K(), latestRate.getRate24K(), latestRate.getUpdatedAt());
+    }
+}

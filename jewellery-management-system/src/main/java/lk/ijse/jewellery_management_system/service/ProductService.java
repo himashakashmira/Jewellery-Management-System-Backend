@@ -14,4 +14,5 @@ public interface ProductService {
     List<ProductDTO> getAllProducts();
 
     ProductDTO getProductById(Integer id);
+
 }

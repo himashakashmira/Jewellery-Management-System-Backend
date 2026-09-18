@@ -6,4 +6,6 @@ public interface GoldRateService {
     void updateGoldRate(GoldRateDTO dto);
 
     Double calculateProductPrice(Integer productId);
-}
+
+    GoldRateDTO getLatestRate();
+}
