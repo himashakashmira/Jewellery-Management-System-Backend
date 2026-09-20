@@ -21,7 +21,7 @@ public class DataInitializer implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
 
-        // 1. Initializing Default Categories
+        // Initializing Default Categories
         if (categoryRepository.count() == 0) {
             categoryRepository.save(Category.builder().name("Rings").build());
             categoryRepository.save(Category.builder().name("Necklace").build());
@@ -32,7 +32,7 @@ public class DataInitializer implements CommandLineRunner {
             System.out.println("Default Categories Added Successfully!");
         }
 
-        // 2. Initializing Default System Users (Admin and Staff)
+        // Initializing Default System Users (Admin and Staff)
         if (userRepository.count() == 0) {
             // create master admin account
             userRepository.save(User.builder()

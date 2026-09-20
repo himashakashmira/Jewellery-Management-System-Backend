@@ -32,11 +32,11 @@ public class AuthenticationService {
         var user = User.builder()
                 .username(request.getUsername())
                 .password(passwordEncoder.encode(request.getPassword()))
-                .role(Role.valueOf(request.getRole()))
+                .role(Role.valueOf("ROLE_" + request.getRole()))
                 .build();
         User savedUser = userRepository.save(user);
 
-        if (savedUser.getRole() == Role.CUSTOMER) {
+        if (savedUser.getRole() == Role.ROLE_CUSTOMER) {
             Customer customer = Customer.builder()
                     .name(request.getFullName())
                     .email(request.getUsername())
