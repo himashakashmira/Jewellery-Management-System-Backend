@@ -2,7 +2,7 @@ package lk.ijse.jewellery_management_system.controller;
 
 import lk.ijse.jewellery_management_system.dto.AuthRequestDTO;
 import lk.ijse.jewellery_management_system.dto.AuthResponseDTO;
-import lk.ijse.jewellery_management_system.entity.User;
+import lk.ijse.jewellery_management_system.dto.RegisterRequestDTO;
 import lk.ijse.jewellery_management_system.service.AuthenticationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -11,13 +11,13 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
-@CrossOrigin // Work to frontend
+@CrossOrigin
 public class AuthenticationController {
 
     private final AuthenticationService service;
 
     @PostMapping("/register")
-    public ResponseEntity<AuthResponseDTO> register(@RequestBody User request) {
+    public ResponseEntity<AuthResponseDTO> register(@RequestBody RegisterRequestDTO request) {
         return ResponseEntity.ok(service.register(request));
     }
 

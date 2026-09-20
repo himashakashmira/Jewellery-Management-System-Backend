@@ -45,6 +45,12 @@ public class ProductServiceImpl implements ProductService {
         product.setWastage(dto.getWastage());
         product.setLabourCost(dto.getLabourCost());
 
+        // also update the category if a new categoryId was provided
+        if (dto.getCategoryId() != null) {
+            product.setCategory(categoryRepository.findById(dto.getCategoryId())
+                    .orElseThrow(() -> new RuntimeException("Category not found")));
+        }
+
         productRepository.save(product);
         return "Item updated successfully";
     }
