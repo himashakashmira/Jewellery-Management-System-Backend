@@ -14,4 +14,9 @@ public class ProductDTO {
     private Double wastage;
     private Double labourCost;
     private Integer categoryId;
+
+    private String itemType;   // "GOLD" or "IMITATION"
+    private String image;      // Image URL or base64 data
+    private Double price;      // Retail fixed price for store items
+    private String material;   // e.g. "18K PVD Champagne Gold"
 }

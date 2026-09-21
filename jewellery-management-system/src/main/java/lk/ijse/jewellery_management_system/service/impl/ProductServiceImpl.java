@@ -26,8 +26,11 @@ public class ProductServiceImpl implements ProductService {
                 .weight(dto.getWeight())
                 .wastage(dto.getWastage())
                 .labourCost(dto.getLabourCost())
-                .category(categoryRepository.findById(dto.getCategoryId())
-                        .orElseThrow(() -> new RuntimeException("Category not found")))
+                .itemType(dto.getItemType() != null ? dto.getItemType() : "GOLD")
+                .image(dto.getImage())
+                .price(dto.getPrice())
+                .material(dto.getMaterial())
+                .category(dto.getCategoryId() != null ? categoryRepository.findById(dto.getCategoryId()).orElse(null) : null)
                 .build();
 
         productRepository.save(product);
@@ -44,11 +47,14 @@ public class ProductServiceImpl implements ProductService {
         product.setWeight(dto.getWeight());
         product.setWastage(dto.getWastage());
         product.setLabourCost(dto.getLabourCost());
+        if (dto.getItemType() != null) product.setItemType(dto.getItemType());
+        if (dto.getImage() != null) product.setImage(dto.getImage());
+        if (dto.getPrice() != null) product.setPrice(dto.getPrice());
+        if (dto.getMaterial() != null) product.setMaterial(dto.getMaterial());
 
         // also update the category if a new categoryId was provided
         if (dto.getCategoryId() != null) {
-            product.setCategory(categoryRepository.findById(dto.getCategoryId())
-                    .orElseThrow(() -> new RuntimeException("Category not found")));
+            product.setCategory(categoryRepository.findById(dto.getCategoryId()).orElse(null));
         }
 
         productRepository.save(product);
@@ -72,7 +78,11 @@ public class ProductServiceImpl implements ProductService {
                         p.getWeight(),
                         p.getWastage(),
                         p.getLabourCost(),
-                        p.getCategory().getId()))
+                        p.getCategory() != null ? p.getCategory().getId() : null,
+                        p.getItemType() != null ? p.getItemType() : "GOLD",
+                        p.getImage(),
+                        p.getPrice(),
+                        p.getMaterial()))
                 .collect(Collectors.toList());
     }
 
@@ -80,6 +90,16 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public ProductDTO getProductById(Integer id) {
         Product p = productRepository.findById(id).orElseThrow();
-        return new ProductDTO(p.getId(), p.getName(), p.getWeight(), p.getWastage(), p.getLabourCost(), p.getCategory().getId());
+        return new ProductDTO(
+                p.getId(),
+                p.getName(),
+                p.getWeight(),
+                p.getWastage(),
+                p.getLabourCost(),
+                p.getCategory() != null ? p.getCategory().getId() : null,
+                p.getItemType() != null ? p.getItemType() : "GOLD",
+                p.getImage(),
+                p.getPrice(),
+                p.getMaterial());
     }
 }

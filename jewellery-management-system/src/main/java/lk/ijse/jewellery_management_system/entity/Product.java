@@ -21,6 +21,17 @@ public class Product {
     private Double wastage;
     private Double labourCost;
 
+    @Column(name = "item_type")
+    private String itemType;
+
+    @Lob
+    @Column(name = "image", columnDefinition = "LONGTEXT")
+    private String image;
+
+    private Double price;
+
+    private String material;
+
     @ManyToOne
     @JoinColumn(name = "category_id")
     private Category category;
