@@ -32,6 +32,9 @@ public class Product {
 
     private String material;
 
+    @Column(name = "status")
+    private String status; // "AVAILABLE", "SOLD"
+
     @ManyToOne
     @JoinColumn(name = "category_id")
     private Category category;

@@ -153,6 +153,12 @@ public class OrderServiceImpl implements OrderService {
                     stockRepository.save(newStock);
                 }
 
+                // If gold item is sold, update status to "SOLD" in database so it is removed from active UI
+                if (!"IMITATION".equalsIgnoreCase(product.getItemType()) || "GOLD".equalsIgnoreCase(product.getItemType())) {
+                    product.setStatus("SOLD");
+                    productRepository.save(product);
+                }
+
                 finalBillAmount += (currentPrice * qty);
             }
         }

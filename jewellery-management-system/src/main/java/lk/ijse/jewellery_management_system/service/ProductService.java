@@ -15,4 +15,10 @@ public interface ProductService {
 
     ProductDTO getProductById(Integer id);
 
+    List<ProductDTO> getLowStockProducts(Integer threshold);
+
+    List<ProductDTO> getSoldProducts();
+
+    String markProductAsSold(Integer id);
+
 }

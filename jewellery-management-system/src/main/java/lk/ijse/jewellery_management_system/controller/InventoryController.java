@@ -33,4 +33,24 @@ public class InventoryController {
     public List<ProductDTO> getAll() {
         return productService.getAllProducts();
     }
+
+    @GetMapping("/sold")
+    public List<ProductDTO> getSold() {
+        return productService.getSoldProducts();
+    }
+
+    @PutMapping("/{id}/sell")
+    public String markSold(@PathVariable Integer id) {
+        return productService.markProductAsSold(id);
+    }
+
+    @GetMapping("/low-stock")
+    public List<ProductDTO> getLowStock(@RequestParam(required = false, defaultValue = "3") Integer threshold) {
+        return productService.getLowStockProducts(threshold);
+    }
+
+    @GetMapping("/{id}")
+    public ProductDTO getById(@PathVariable Integer id) {
+        return productService.getProductById(id);
+    }
 }
