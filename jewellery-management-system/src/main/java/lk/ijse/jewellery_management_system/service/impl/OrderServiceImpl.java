@@ -28,9 +28,21 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public String placeOrder(OrderDTO dto) {
-        // Get current customer
-        Customer customer = customerRepository.findById(dto.getCustomerId())
-                .orElseThrow(() -> new RuntimeException("Customer Not Found"));
+        // Get current customer or fallback to walk-in patron
+        Customer customer;
+        if (dto.getCustomerId() == null || dto.getCustomerId() <= 0) {
+            customer = customerRepository.findAll().stream().findFirst().orElse(null);
+            if (customer == null) {
+                customer = customerRepository.save(Customer.builder()
+                        .name("Walk-in Boutique Client")
+                        .contact("+94 11 234 5678")
+                        .loyaltyPoints(0)
+                        .build());
+            }
+        } else {
+            customer = customerRepository.findById(dto.getCustomerId())
+                    .orElseThrow(() -> new RuntimeException("Customer Not Found"));
+        }
 
         // Create the main Order
         Order order = Order.builder()
