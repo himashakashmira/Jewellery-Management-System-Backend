@@ -27,6 +27,14 @@ public class Order {
     @JoinColumn(name = "customer_id")
     private Customer customer;
 
+    private String customerName;
+    private String customerContact;
+    private String orderType; // "IMITATION", "GOLD", "POS"
+    private String orderRef;
+    private String deliveryAddress;
+    private String paymentMethod;
+    private String status; // "PENDING_APPROVAL", "APPROVED", "COMPLETED", "REJECTED"
+
     @OneToMany(mappedBy = "order")
     private List<OrderDetail> orderDetails;
 }

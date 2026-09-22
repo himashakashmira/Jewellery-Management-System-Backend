@@ -17,4 +17,8 @@ public interface OrderService {
     OrderResponseDTO getOrderById(Integer id);
 
     ReportSummaryDTO getReportSummary();
+
+    String approveOrder(Integer id);
+
+    List<OrderResponseDTO> getImitationOrders();
 }

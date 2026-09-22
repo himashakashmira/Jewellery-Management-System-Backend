@@ -41,7 +41,7 @@ public class SecurityConfiguration {
 
                 // Authorization Rules
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/v1/auth/**").permitAll()
+                        .requestMatchers("/api/v1/auth/**", "/api/v1/orders/place").permitAll()
                         .anyRequest().authenticated()
                 )
 

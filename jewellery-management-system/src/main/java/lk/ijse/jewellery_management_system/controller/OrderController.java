@@ -41,5 +41,15 @@ public class OrderController {
     public ReportSummaryDTO getReportSummary() {
         return orderService.getReportSummary();
     }
+
+    @PutMapping("/{id}/approve")
+    public String approveOrder(@PathVariable Integer id) {
+        return orderService.approveOrder(id);
+    }
+
+    @GetMapping("/imitation")
+    public List<OrderResponseDTO> getImitationOrders() {
+        return orderService.getImitationOrders();
+    }
 }
 
