@@ -3,7 +3,10 @@ package lk.ijse.jewellery_management_system.service.impl;
 import jakarta.transaction.Transactional;
 import lk.ijse.jewellery_management_system.dto.OrderDTO;
 import lk.ijse.jewellery_management_system.dto.OrderDetailDTO;
+import lk.ijse.jewellery_management_system.dto.OrderItemResponseDTO;
+import lk.ijse.jewellery_management_system.dto.OrderResponseDTO;
 import lk.ijse.jewellery_management_system.dto.OrderStatsDTO;
+import lk.ijse.jewellery_management_system.dto.ReportSummaryDTO;
 import lk.ijse.jewellery_management_system.entity.*;
 import lk.ijse.jewellery_management_system.repository.*;
 import lk.ijse.jewellery_management_system.service.GoldRateService;
@@ -12,7 +15,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -71,11 +76,19 @@ public class OrderServiceImpl implements OrderService {
                     .build();
             orderDetailRepository.save(detail);
 
-            // Update stock (Reduce Qty)
+            // Update stock (Reduce Qty in inventory)
             Stock stock = stockRepository.findByProduct(product);
-            if(stock != null) {
-                stock.setQuantity(stock.getQuantity() - itemDto.getQty());
+            if (stock != null) {
+                stock.setQuantity(Math.max(0, stock.getQuantity() - itemDto.getQty()));
+                stock.setLastUpdated(LocalDateTime.now());
                 stockRepository.save(stock);
+            } else {
+                Stock newStock = Stock.builder()
+                        .product(product)
+                        .quantity(0)
+                        .lastUpdated(LocalDateTime.now())
+                        .build();
+                stockRepository.save(newStock);
             }
 
             finalBillAmount += (currentPrice * itemDto.getQty());
@@ -101,5 +114,104 @@ public class OrderServiceImpl implements OrderService {
                 .mapToDouble(o -> o.getTotalAmount() != null ? o.getTotalAmount() : 0.0)
                 .sum();
         return new OrderStatsDTO(orderCount, totalSales);
+    }
+
+    @Override
+    public List<OrderResponseDTO> getAllOrders() {
+        return orderRepository.findAll().stream()
+                .sorted((a, b) -> b.getOrderDate().compareTo(a.getOrderDate()))
+                .map(this::mapToOrderResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public OrderResponseDTO getOrderById(Integer id) {
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Order not found with id: " + id));
+        return mapToOrderResponse(order);
+    }
+
+    @Override
+    public ReportSummaryDTO getReportSummary() {
+        List<Order> orders = orderRepository.findAll();
+        long totalOrders = orders.size();
+        double grossRevenue = orders.stream()
+                .mapToDouble(o -> o.getTotalAmount() != null ? o.getTotalAmount() : 0.0)
+                .sum();
+        double aov = totalOrders > 0 ? (grossRevenue / totalOrders) : 0.0;
+
+        List<OrderDetail> allDetails = orderDetailRepository.findAll();
+        long totalItemsSold = allDetails.stream()
+                .mapToLong(d -> d.getQty() != null ? d.getQty() : 0)
+                .sum();
+
+        double goldRevenue = allDetails.stream()
+                .filter(d -> d.getProduct() != null && !"IMITATION".equalsIgnoreCase(d.getProduct().getItemType()))
+                .mapToDouble(d -> (d.getUnitPrice() != null ? d.getUnitPrice() : 0.0) * (d.getQty() != null ? d.getQty() : 1))
+                .sum();
+
+        double imitationRevenue = allDetails.stream()
+                .filter(d -> d.getProduct() != null && "IMITATION".equalsIgnoreCase(d.getProduct().getItemType()))
+                .mapToDouble(d -> (d.getUnitPrice() != null ? d.getUnitPrice() : 0.0) * (d.getQty() != null ? d.getQty() : 1))
+                .sum();
+
+        List<OrderResponseDTO> recent = orders.stream()
+                .sorted((a, b) -> b.getOrderDate().compareTo(a.getOrderDate()))
+                .limit(10)
+                .map(this::mapToOrderResponse)
+                .collect(Collectors.toList());
+
+        return ReportSummaryDTO.builder()
+                .grossRevenue(Math.round(grossRevenue * 100.0) / 100.0)
+                .totalOrders(totalOrders)
+                .averageOrderValue(Math.round(aov * 100.0) / 100.0)
+                .totalItemsSold(totalItemsSold)
+                .goldRevenue(Math.round(goldRevenue * 100.0) / 100.0)
+                .imitationRevenue(Math.round(imitationRevenue * 100.0) / 100.0)
+                .recentOrders(recent)
+                .build();
+    }
+
+    private OrderResponseDTO mapToOrderResponse(Order o) {
+        Customer c = o.getCustomer();
+        List<OrderDetail> details = orderDetailRepository.findAll().stream()
+                .filter(d -> d.getOrder() != null && d.getOrder().getId().equals(o.getId()))
+                .collect(Collectors.toList());
+
+        int totalItems = 0;
+        java.util.List<lk.ijse.jewellery_management_system.dto.OrderItemResponseDTO> itemDTOs = new java.util.ArrayList<>();
+        for (OrderDetail d : details) {
+            Product p = d.getProduct();
+            int qty = d.getQty() != null ? d.getQty() : 1;
+            totalItems += qty;
+            double unitPrice = d.getUnitPrice() != null ? d.getUnitPrice() : 0.0;
+            double lineTotal = Math.round(unitPrice * qty * 100.0) / 100.0;
+
+            String pName = (p != null && p.getName() != null) ? p.getName() : "Jewellery Piece";
+            String itemType = (p != null && p.getItemType() != null) ? p.getItemType() : "GOLD";
+            String karat = (p != null && p.getMaterial() != null) ? p.getMaterial() : ("IMITATION".equalsIgnoreCase(itemType) ? "18K PVD" : "22K Gold");
+
+            itemDTOs.add(lk.ijse.jewellery_management_system.dto.OrderItemResponseDTO.builder()
+                    .productId(p != null ? p.getId() : null)
+                    .productName(pName)
+                    .itemType(itemType)
+                    .karat(karat)
+                    .qty(qty)
+                    .unitPrice(unitPrice)
+                    .lineTotal(lineTotal)
+                    .build());
+        }
+
+        return OrderResponseDTO.builder()
+                .id(o.getId())
+                .orderDate(o.getOrderDate())
+                .totalAmount(o.getTotalAmount() != null ? o.getTotalAmount() : 0.0)
+                .discount(o.getDiscount() != null ? o.getDiscount() : 0.0)
+                .customerId(c != null ? c.getId() : null)
+                .customerName(c != null ? c.getName() : "Walk-in Boutique Client")
+                .customerContact(c != null ? c.getContact() : "")
+                .totalItems(totalItems)
+                .items(itemDTOs)
+                .build();
     }
 }

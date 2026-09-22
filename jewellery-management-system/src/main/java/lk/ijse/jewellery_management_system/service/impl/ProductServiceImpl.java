@@ -2,12 +2,15 @@ package lk.ijse.jewellery_management_system.service.impl;
 
 import lk.ijse.jewellery_management_system.dto.ProductDTO;
 import lk.ijse.jewellery_management_system.entity.Product;
+import lk.ijse.jewellery_management_system.entity.Stock;
 import lk.ijse.jewellery_management_system.repository.CategoryRepository;
 import lk.ijse.jewellery_management_system.repository.ProductRepository;
+import lk.ijse.jewellery_management_system.repository.StockRepository;
 import lk.ijse.jewellery_management_system.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -17,8 +20,9 @@ public class ProductServiceImpl implements ProductService {
 
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
+    private final StockRepository stockRepository;
 
-    // save new jewellery item to database
+    // save new jewellery item to database and initialize stock
     @Override
     public String saveProduct(ProductDTO dto) {
         Product product = Product.builder()
@@ -33,11 +37,21 @@ public class ProductServiceImpl implements ProductService {
                 .category(dto.getCategoryId() != null ? categoryRepository.findById(dto.getCategoryId()).orElse(null) : null)
                 .build();
 
-        productRepository.save(product);
+        Product savedProduct = productRepository.save(product);
+
+        // Record stock in inventory database
+        int stockQty = (dto.getStock() != null && dto.getStock() > 0) ? dto.getStock() : 1;
+        Stock stock = Stock.builder()
+                .product(savedProduct)
+                .quantity(stockQty)
+                .lastUpdated(LocalDateTime.now())
+                .build();
+        stockRepository.save(stock);
+
         return "Item saved successfully";
     }
 
-    // update existing item details
+    // update existing item details and stock
     @Override
     public String updateProduct(Integer id, ProductDTO dto) {
         Product product = productRepository.findById(id)
@@ -58,38 +72,69 @@ public class ProductServiceImpl implements ProductService {
         }
 
         productRepository.save(product);
+
+        // update stock quantity if provided
+        if (dto.getStock() != null) {
+            Stock stock = stockRepository.findByProduct(product);
+            if (stock == null) {
+                stock = Stock.builder()
+                        .product(product)
+                        .quantity(dto.getStock())
+                        .lastUpdated(LocalDateTime.now())
+                        .build();
+            } else {
+                stock.setQuantity(dto.getStock());
+                stock.setLastUpdated(LocalDateTime.now());
+            }
+            stockRepository.save(stock);
+        }
+
         return "Item updated successfully";
     }
 
-    // remove item from inventory
+    // remove item and its stock record from inventory
     @Override
     public String deleteProduct(Integer id) {
-        productRepository.deleteById(id);
+        Product product = productRepository.findById(id).orElse(null);
+        if (product != null) {
+            Stock stock = stockRepository.findByProduct(product);
+            if (stock != null) {
+                stockRepository.delete(stock);
+            }
+            productRepository.delete(product);
+        }
         return "Item deleted";
     }
 
-    // get all stock items as DTO list
+    // get all stock items as DTO list with live stock count
     @Override
     public List<ProductDTO> getAllProducts() {
         return productRepository.findAll().stream()
-                .map(p -> new ProductDTO(
-                        p.getId(),
-                        p.getName(),
-                        p.getWeight(),
-                        p.getWastage(),
-                        p.getLabourCost(),
-                        p.getCategory() != null ? p.getCategory().getId() : null,
-                        p.getItemType() != null ? p.getItemType() : "GOLD",
-                        p.getImage(),
-                        p.getPrice(),
-                        p.getMaterial()))
+                .map(p -> {
+                    Stock stock = stockRepository.findByProduct(p);
+                    Integer stockQty = (stock != null) ? stock.getQuantity() : 1;
+                    return new ProductDTO(
+                            p.getId(),
+                            p.getName(),
+                            p.getWeight(),
+                            p.getWastage(),
+                            p.getLabourCost(),
+                            p.getCategory() != null ? p.getCategory().getId() : null,
+                            p.getItemType() != null ? p.getItemType() : "GOLD",
+                            p.getImage(),
+                            p.getPrice(),
+                            p.getMaterial(),
+                            stockQty);
+                })
                 .collect(Collectors.toList());
     }
 
-    // find one item by its ID
+    // find one item by its ID with stock count
     @Override
     public ProductDTO getProductById(Integer id) {
         Product p = productRepository.findById(id).orElseThrow();
+        Stock stock = stockRepository.findByProduct(p);
+        Integer stockQty = (stock != null) ? stock.getQuantity() : 1;
         return new ProductDTO(
                 p.getId(),
                 p.getName(),
@@ -100,6 +145,7 @@ public class ProductServiceImpl implements ProductService {
                 p.getItemType() != null ? p.getItemType() : "GOLD",
                 p.getImage(),
                 p.getPrice(),
-                p.getMaterial());
+                p.getMaterial(),
+                stockQty);
     }
 }

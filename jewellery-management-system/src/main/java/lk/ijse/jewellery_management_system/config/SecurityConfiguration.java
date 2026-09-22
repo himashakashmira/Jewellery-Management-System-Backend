@@ -27,7 +27,11 @@ public class SecurityConfiguration {
                 // Enable CORS and Disable CSRF
                 .cors(cors -> cors.configurationSource(request -> {
                     var corsConfiguration = new org.springframework.web.cors.CorsConfiguration();
-                    corsConfiguration.setAllowedOrigins(java.util.List.of("http://127.0.0.1:5501", "http://localhost:5501"));
+                    corsConfiguration.setAllowedOriginPatterns(java.util.List.of(
+                            "http://127.0.0.1:*",
+                            "http://localhost:*",
+                            "http://[::1]:*"
+                    ));
                     corsConfiguration.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
                     corsConfiguration.setAllowedHeaders(java.util.List.of("*"));
                     corsConfiguration.setAllowCredentials(true);
