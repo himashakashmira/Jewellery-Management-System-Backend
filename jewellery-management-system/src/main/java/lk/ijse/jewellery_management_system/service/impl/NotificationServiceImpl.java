@@ -22,26 +22,42 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     public void notifyCustomer(Integer userId, String email, String message) {
-        // 1. save notification to database
-        User user = userRepository.findById(userId).orElseThrow();
-        Notification notification = Notification.builder()
-                .message(message)
-                .user(user)
-                .createdAt(LocalDateTime.now())
-                .isRead(false)
-                .build();
-        notificationRepository.save(notification);
+        notifyCustomer(userId, email, "AURUM JEWELS | Repair Lounge Docket Update", message);
+    }
 
-        // 2. send automated email to customer
-        try {
-            SimpleMailMessage mailMessage = new SimpleMailMessage();
-            mailMessage.setTo(email);
-            mailMessage.setSubject("AURUM JEWELS - Update");
-            mailMessage.setText(message);
-            mailSender.send(mailMessage);
-        } catch (Exception e) {
-            // log error if email fails
-            System.out.println("Email failed: " + e.getMessage());
+    @Override
+    public void notifyCustomer(Integer userId, String email, String subject, String message) {
+        // save notification to database if valid user account exists
+        if (userId != null) {
+            userRepository.findById(userId).ifPresent(user -> {
+                Notification notification = Notification.builder()
+                        .message(message)
+                        .user(user)
+                        .createdAt(LocalDateTime.now())
+                        .isRead(false)
+                        .build();
+                notificationRepository.save(notification);
+            });
+        }
+
+        sendEmail(email, subject, message);
+    }
+
+    @Override
+    public void sendEmail(String email, String subject, String message) {
+        // send automated email to customer/member
+        if (email != null && !email.isBlank()) {
+            try {
+                SimpleMailMessage mailMessage = new SimpleMailMessage();
+                mailMessage.setFrom("himashakashmira7@gmail.com");
+                mailMessage.setTo(email.trim());
+                mailMessage.setSubject(subject != null ? subject : "AURUM JEWELS Notification");
+                mailMessage.setText(message);
+                mailSender.send(mailMessage);
+                System.out.println("[Automated Email] Successfully dispatched email to: " + email + " | Subject: " + subject);
+            } catch (Exception e) {
+                System.err.println("[Automated Email] Notification failed/logged: " + e.getMessage());
+            }
         }
     }
 }

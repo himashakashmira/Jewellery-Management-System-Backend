@@ -13,4 +13,6 @@ public interface RepairService {
     List<RepairDTO> getAllRepairs();
 
     RepairStatsDTO getRepairStats();
-}
+
+    void notifyRepairReady(Integer id, String email);
+}
